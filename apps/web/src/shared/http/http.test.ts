@@ -1,17 +1,17 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Api } from './api';
+import { Http } from './http';
 
 // Mock fetch globally
 (globalThis as Record<string, unknown>).fetch = vi.fn();
 
 describe('Api', () => {
-    let api: Api;
+    let http: Http;
 
     beforeEach(() => {
         vi.clearAllMocks();
-        api = Api.getInstance();
-        api.setBaseURL('');
-        api.setDefaultHeaders({});
+        http = Http.getInstance();
+        http.setBaseURL('');
+        http.setDefaultHeaders({});
     });
 
     describe('basic requests', () => {
@@ -24,7 +24,7 @@ describe('Api', () => {
                 headers: new Headers({ 'content-type': 'application/json' }),
             });
 
-            const result = await api.get('/api/test');
+            const result = await http.get('/api/test');
 
             expect(fetch).toHaveBeenCalledWith(
                 '/api/test',
@@ -45,7 +45,7 @@ describe('Api', () => {
                 headers: new Headers({ 'content-type': 'application/json' }),
             });
 
-            const result = await api.post('/api/users', requestBody);
+            const result = await http.post('/api/users', requestBody);
 
             expect(fetch).toHaveBeenCalledWith(
                 '/api/users',
@@ -64,7 +64,7 @@ describe('Api', () => {
     describe('401 handling and refresh policy', () => {
         it('should abort all requests and retry after refresh on 401', async () => {
             const refreshHandler = vi.fn().mockResolvedValue(undefined);
-            api.setRefreshHandler(refreshHandler);
+            http.setRefreshHandler(refreshHandler);
 
             const mockResponse1 = { data: 'test1' };
             const mockResponse2 = { data: 'test2' };
@@ -97,9 +97,9 @@ describe('Api', () => {
             });
 
             // Make multiple requests
-            const promise1 = api.get('/api/test1');
-            const promise2 = api.get('/api/test2');
-            const promise3 = api.get('/api/test3');
+            const promise1 = http.get('/api/test1');
+            const promise2 = http.get('/api/test2');
+            const promise3 = http.get('/api/test3');
 
             const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
 
@@ -114,7 +114,7 @@ describe('Api', () => {
 
         it('should handle concurrent 401s and only refresh once', async () => {
             const refreshHandler = vi.fn().mockResolvedValue(undefined);
-            api.setRefreshHandler(refreshHandler);
+            http.setRefreshHandler(refreshHandler);
 
             const mockResponse = { data: 'test' };
 
@@ -140,9 +140,9 @@ describe('Api', () => {
 
             // Make concurrent requests that all get 401
             const promises = [
-                api.get('/api/test1'),
-                api.get('/api/test2'),
-                api.get('/api/test3'),
+                http.get('/api/test1'),
+                http.get('/api/test2'),
+                http.get('/api/test3'),
             ];
 
             await Promise.all(promises);
@@ -154,7 +154,7 @@ describe('Api', () => {
         it('should reject all requests if refresh fails', async () => {
             const refreshError = new Error('Refresh failed');
             const refreshHandler = vi.fn().mockRejectedValue(refreshError);
-            api.setRefreshHandler(refreshHandler);
+            http.setRefreshHandler(refreshHandler);
 
             (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
                 ok: false,
@@ -162,8 +162,8 @@ describe('Api', () => {
                 headers: new Headers(),
             });
 
-            const promise1 = api.get('/api/test1');
-            const promise2 = api.get('/api/test2');
+            const promise1 = http.get('/api/test1');
+            const promise2 = http.get('/api/test2');
 
             await expect(promise1).rejects.toThrow('Refresh failed');
             await expect(promise2).rejects.toThrow('Refresh failed');
@@ -173,7 +173,7 @@ describe('Api', () => {
             const refreshHandler = vi.fn(
                 () => new Promise((resolve) => setTimeout(resolve, 50))
             );
-            api.setRefreshHandler(refreshHandler as () => Promise<void>);
+            http.setRefreshHandler(refreshHandler as () => Promise<void>);
 
             const mockResponse = { data: 'test' };
 
@@ -198,11 +198,11 @@ describe('Api', () => {
             });
 
             // Start first request
-            const promise1 = api.get('/api/test1');
+            const promise1 = http.get('/api/test1');
             // Small delay to let first request trigger refresh
             await new Promise((resolve) => setTimeout(resolve, 10));
             // Second request comes in while refresh is ongoing - should wait and retry
-            const promise2 = api.get('/api/test2');
+            const promise2 = http.get('/api/test2');
 
             // Wait for both to complete (using allSettled to handle potential rejections)
             const results = await Promise.allSettled([promise1, promise2]);
@@ -218,7 +218,7 @@ describe('Api', () => {
     describe('abort controller policy', () => {
         it('should abort requests when 401 occurs', async () => {
             const refreshHandler = vi.fn().mockResolvedValue(undefined);
-            api.setRefreshHandler(refreshHandler);
+            http.setRefreshHandler(refreshHandler);
 
             const mockResponse = { data: 'test' };
 
@@ -243,8 +243,8 @@ describe('Api', () => {
                     headers: new Headers({ 'content-type': 'application/json' }),
                 });
 
-            const promise1 = api.get('/api/test1');
-            const promise2 = api.get('/api/test2');
+            const promise1 = http.get('/api/test1');
+            const promise2 = http.get('/api/test2');
 
             await Promise.all([promise1, promise2]);
 
@@ -263,12 +263,12 @@ describe('Api', () => {
                 headers: new Headers(),
             });
 
-            await expect(api.get('/api/not-found')).rejects.toThrow('HTTP error! status: 404');
+            await expect(http.get('/api/not-found')).rejects.toThrow('HTTP error! status: 404');
         });
 
         it('should reject if 401 occurs again after refresh', async () => {
             const refreshHandler = vi.fn().mockResolvedValue(undefined);
-            api.setRefreshHandler(refreshHandler);
+            http.setRefreshHandler(refreshHandler);
 
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             let callCount = 0;
@@ -282,7 +282,7 @@ describe('Api', () => {
                 });
             });
 
-            await expect(api.get('/api/test')).rejects.toThrow('HTTP error! status: 401');
+                    await expect(http.get('/api/test')).rejects.toThrow('HTTP error! status: 401');
         });
     });
 
@@ -291,7 +291,7 @@ describe('Api', () => {
             const mockResponse = { data: 'test' };
             const token = 'my-secret-token';
             
-            api.setBearerToken(() => token);
+            http.setBearerToken(() => token);
             
             (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
                 ok: true,
@@ -300,7 +300,7 @@ describe('Api', () => {
                 headers: new Headers({ 'content-type': 'application/json' }),
             });
 
-            await api.get('/api/test');
+            await http.get('/api/test');
 
             expect(fetch).toHaveBeenCalledWith(
                 '/api/test',
@@ -316,7 +316,7 @@ describe('Api', () => {
             const mockResponse = { data: 'test' };
             const token = 'async-token';
             
-            api.setBearerToken(async () => {
+            http.setBearerToken(async () => {
                 await new Promise((resolve) => setTimeout(resolve, 10));
                 return token;
             });
@@ -328,7 +328,7 @@ describe('Api', () => {
                 headers: new Headers({ 'content-type': 'application/json' }),
             });
 
-            await api.get('/api/test');
+            await http.get('/api/test');
 
             expect(fetch).toHaveBeenCalledWith(
                 '/api/test',
@@ -343,7 +343,7 @@ describe('Api', () => {
         it('should not add Authorization header when token getter returns null', async () => {
             const mockResponse = { data: 'test' };
             
-            api.setBearerToken(() => null);
+            http.setBearerToken(() => null);
             
             (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
                 ok: true,
@@ -352,7 +352,7 @@ describe('Api', () => {
                 headers: new Headers({ 'content-type': 'application/json' }),
             });
 
-            await api.get('/api/test');
+            await http.get('/api/test');
 
             const fetchCall = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
             const headers = fetchCall[1]?.headers as Record<string, string>;
@@ -364,8 +364,8 @@ describe('Api', () => {
             const refreshHandler = vi.fn().mockResolvedValue(undefined);
             const token = 'refreshed-token';
             
-            api.setRefreshHandler(refreshHandler);
-            api.setBearerToken(() => token);
+            http.setRefreshHandler(refreshHandler);
+            http.setBearerToken(() => token);
 
             const mockResponse = { data: 'test' };
 
@@ -387,7 +387,7 @@ describe('Api', () => {
                 });
             });
 
-            await api.get('/api/test');
+            await http.get('/api/test');
 
             // Check that retry includes bearer token
             const retryCall = (fetch as ReturnType<typeof vi.fn>).mock.calls[1];
@@ -400,7 +400,7 @@ describe('Api', () => {
             const mockResponse = { data: 'test' };
             const token = 'my-token';
             
-            api.setBearerToken(() => token);
+            http.setBearerToken(() => token);
             
             (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
                 ok: true,
@@ -409,7 +409,7 @@ describe('Api', () => {
                 headers: new Headers({ 'content-type': 'application/json' }),
             });
 
-            await api.get('/api/test', {
+            await http.get('/api/test', {
                 headers: {
                     'X-Custom-Header': 'custom-value',
                 },
@@ -457,7 +457,7 @@ describe('Api', () => {
                 });
             });
 
-            const promise = api.get('/api/test', { signal: externalController.signal });
+            const promise = http.get('/api/test', { signal: externalController.signal });
             
             // Abort externally before request completes
             externalController.abort();
@@ -469,7 +469,7 @@ describe('Api', () => {
             const refreshHandler = vi.fn().mockResolvedValue(undefined);
             const externalController = new AbortController();
             
-            api.setRefreshHandler(refreshHandler);
+            http.setRefreshHandler(refreshHandler);
 
             let callCount = 0;
             (fetch as ReturnType<typeof vi.fn>).mockImplementation(() => {
@@ -489,7 +489,7 @@ describe('Api', () => {
                 });
             });
 
-            const promise = api.get('/api/test', { signal: externalController.signal });
+            const promise = http.get('/api/test', { signal: externalController.signal });
             
             // Abort externally before refresh completes
             externalController.abort();
@@ -514,7 +514,7 @@ describe('Api', () => {
             });
 
             // Request should succeed if neither signal is aborted
-            const result = await api.get('/api/test', { signal: externalController.signal });
+            const result = await http.get('/api/test', { signal: externalController.signal });
             expect(result).toEqual(mockResponse);
         });
 
@@ -529,7 +529,7 @@ describe('Api', () => {
             });
 
             // Should work normally without external signal
-            const result = await api.get('/api/test');
+            const result = await http.get('/api/test');
             expect(result).toEqual(mockResponse);
         });
     });

@@ -11,8 +11,8 @@ interface QueuedRequest {
     reject: (reason?: unknown) => void;
 }
 
-export class Api extends Network {
-    protected static instance: Api;
+export class Http extends Network {
+    protected static instance: Http;
     private requestQueue: QueuedRequest[] = [];
     private waitingRequests: QueuedRequest[] = [];
     private isRefreshing: boolean = false;
@@ -24,11 +24,11 @@ export class Api extends Network {
         super();
     }
 
-    public static getInstance(): Api {
-        if (!Api.instance) {
-            Api.instance = new Api();
+    public static getInstance(): Http {
+        if (!Http.instance) {
+            Http.instance = new Http();
         }
-        return Api.instance;
+        return Http.instance;
     }
 
     public setRefreshHandler(handler: () => Promise<void>): void {
@@ -355,4 +355,4 @@ export class Api extends Network {
     }
 }
 
-export const api = Api.getInstance();
+export const http = Http.getInstance();
