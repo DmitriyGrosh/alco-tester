@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build",
-    "check-types": "turbo run check-types"
+    "build": "turbo run build"
   },
   "devDependencies": {
     "turbo": "^2.6.3"
   },
-  "packageManager": "pnpm@8.0.0"
+  "packageManager": "pnpm@8.0.0",
+  "engines": {
+    "node": ">=20.19.0 || >=22.12.0"
+  }
 }
