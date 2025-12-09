@@ -1,4 +1,5 @@
 import { connectLogger, log } from '@reatom/core'
+import 'antd/dist/reset.css'
 
 if (import.meta.env.MODE === 'development') {
   connectLogger()
