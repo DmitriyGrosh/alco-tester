@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { network } from './network';
 
 // Mock fetch globally
-global.fetch = vi.fn()
+(globalThis as Record<string, unknown>).fetch = vi.fn()
 
 describe('Network', () => {
   beforeEach(() => {

@@ -5,7 +5,8 @@ interface QueuedRequest {
     options: RequestInit;
     method: string;
     body?: unknown;
-    abortController: AbortController;
+    abortController: AbortController; // Internal controller for queue management
+    externalSignal: AbortSignal | null; // External signal from user
     resolve: (value: unknown) => void;
     reject: (reason?: unknown) => void;
 }
@@ -17,6 +18,7 @@ export class Api extends Network {
     private isRefreshing: boolean = false;
     private refreshPromise: Promise<void> | null = null;
     private onRefresh: (() => Promise<void>) | null = null;
+    private getBearerToken: (() => string | null | Promise<string | null>) | null = null;
 
     protected constructor() {
         super();
@@ -33,15 +35,91 @@ export class Api extends Network {
         this.onRefresh = handler;
     }
 
+    public setBearerToken(tokenGetter: () => string | null | Promise<string | null>): void {
+        this.getBearerToken = tokenGetter;
+    }
+
+    /**
+     * Creates a combined AbortSignal that aborts when either signal aborts
+     */
+    private createCombinedSignal(
+        internalSignal: AbortSignal,
+        externalSignal: AbortSignal | null
+    ): AbortSignal {
+        if (!externalSignal) {
+            return internalSignal;
+        }
+
+        // If external signal is already aborted, return it
+        if (externalSignal.aborted) {
+            return externalSignal;
+        }
+
+        // Create a new controller for the combined signal
+        const combinedController = new AbortController();
+
+        // Abort combined signal when internal signal aborts
+        if (internalSignal.aborted) {
+            combinedController.abort();
+        } else {
+            internalSignal.addEventListener('abort', () => {
+                combinedController.abort();
+            });
+        }
+
+        // Abort combined signal when external signal aborts
+        externalSignal.addEventListener('abort', () => {
+            combinedController.abort();
+        });
+
+        return combinedController.signal;
+    }
+
     private async executeRequest<T>(
         url: string,
         options: RequestInit
     ): Promise<T> {
-        const abortController = new AbortController();
+        // Internal abort controller for queue management
+        const internalAbortController = new AbortController();
+        
+        // Extract external signal if provided
+        const externalSignal = options.signal || null;
+
+        // Create combined signal that aborts when either aborts
+        const combinedSignal = this.createCombinedSignal(
+            internalAbortController.signal,
+            externalSignal
+        );
+
+        // Get bearer token if token getter is set
+        let bearerToken: string | null = null;
+        if (this.getBearerToken) {
+            const tokenResult = this.getBearerToken();
+            bearerToken = tokenResult instanceof Promise ? await tokenResult : tokenResult;
+        }
+
+        // Build headers with bearer token if available
+        // Convert existing headers to plain object if needed
+        const existingHeaders = options.headers instanceof Headers
+            ? Object.fromEntries(options.headers.entries())
+            : (options.headers || {});
+        
+        const headers: HeadersInit = {
+            ...existingHeaders,
+        };
+        
+        if (bearerToken) {
+            (headers as Record<string, string>)['Authorization'] = `Bearer ${bearerToken}`;
+        }
+
+        // Remove signal from options since we're using combined signal
+        const { signal: _signal, ...optionsWithoutSignal } = options;
+        void _signal; // Mark as intentionally unused
 
         const requestOptions: RequestInit = {
-            ...options,
-            signal: abortController.signal,
+            ...optionsWithoutSignal,
+            headers,
+            signal: combinedSignal,
         };
 
         // Extract method from options for queue tracking
@@ -53,7 +131,8 @@ export class Api extends Network {
                 options: requestOptions,
                 method,
                 body: options.body,
-                abortController,
+                abortController: internalAbortController, // Store internal controller for queue management
+                externalSignal, // Store external signal to check if user aborted
                 resolve: (value: unknown) => resolve(value as T),
                 reject,
             };
@@ -95,8 +174,19 @@ export class Api extends Network {
                     }
                 })
                 .catch(async (error) => {
-                    // Don't remove from queue if request was aborted (we'll retry it)
+                    // Check if aborted by external signal (user cancellation)
                     if (error.name === 'AbortError') {
+                        // If external signal was aborted, reject immediately (user cancelled)
+                        if (queuedRequest.externalSignal?.aborted) {
+                            const index = this.requestQueue.indexOf(queuedRequest);
+                            if (index > -1) {
+                                this.requestQueue.splice(index, 1);
+                            }
+                            reject(error);
+                            return;
+                        }
+                        // Otherwise, it was aborted by internal controller (for queue management)
+                        // Don't remove from queue - we'll retry it
                         return;
                     }
 
@@ -135,13 +225,20 @@ export class Api extends Network {
         }
 
         // Abort all pending requests (including the one that triggered 401)
-        const requestsToRetry = [...this.requestQueue, ...this.waitingRequests];
-        this.requestQueue.forEach((request) => {
-            request.abortController.abort();
+        // Filter out requests that were aborted by external signal (user cancelled)
+        const requestsToRetry = [...this.requestQueue, ...this.waitingRequests].filter(
+            (req) => !req.externalSignal?.aborted
+        );
+        
+        // Reject requests that were cancelled by user
+        [...this.requestQueue, ...this.waitingRequests].forEach((request) => {
+            if (request.externalSignal?.aborted) {
+                request.reject(new Error('Request was aborted by user'));
+            } else {
+                request.abortController.abort();
+            }
         });
-        this.waitingRequests.forEach((request) => {
-            request.abortController.abort();
-        });
+        
         this.requestQueue = [];
         this.waitingRequests = [];
 
@@ -171,11 +268,51 @@ export class Api extends Network {
 
     private async retryRequest(request: QueuedRequest): Promise<void> {
         try {
+            // If external signal was aborted (user cancelled), don't retry
+            if (request.externalSignal?.aborted) {
+                request.reject(new Error('Request was aborted by user'));
+                return;
+            }
+
             // Reconstruct request options without the abort signal
             const { signal: _signal, ...optionsWithoutSignal } = request.options;
             void _signal; // Mark as intentionally unused
 
-            const response = await super.requestRaw(request.url, optionsWithoutSignal).catch((error) => {
+            // Create new combined signal for retry (with fresh internal controller)
+            const retryInternalController = new AbortController();
+            const retryCombinedSignal = this.createCombinedSignal(
+                retryInternalController.signal,
+                request.externalSignal
+            );
+
+            // Get fresh bearer token for retry
+            let bearerToken: string | null = null;
+            if (this.getBearerToken) {
+                const tokenResult = this.getBearerToken();
+                bearerToken = tokenResult instanceof Promise ? await tokenResult : tokenResult;
+            }
+
+            // Update headers with fresh bearer token
+            // Convert existing headers to plain object if needed
+            const existingHeaders = optionsWithoutSignal.headers instanceof Headers
+                ? Object.fromEntries(optionsWithoutSignal.headers.entries())
+                : (optionsWithoutSignal.headers || {});
+            
+            const headers: HeadersInit = {
+                ...existingHeaders,
+            };
+            
+            if (bearerToken) {
+                (headers as Record<string, string>)['Authorization'] = `Bearer ${bearerToken}`;
+            }
+
+            const retryOptions: RequestInit = {
+                ...optionsWithoutSignal,
+                headers,
+                signal: retryCombinedSignal,
+            };
+
+            const response = await super.requestRaw(request.url, retryOptions).catch((error) => {
                 // If fetch itself fails, reject
                 throw error;
             });
@@ -219,11 +356,3 @@ export class Api extends Network {
 }
 
 export const api = Api.getInstance();
-
-api.setBaseURL('https://api.example.com');
-api.setDefaultHeaders({
-    'Content-Type': 'application/json',
-});
-api.setRefreshHandler(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-});

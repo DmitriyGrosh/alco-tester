@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Api } from './api';
 
 // Mock fetch globally
-global.fetch = vi.fn();
+(globalThis as Record<string, unknown>).fetch = vi.fn();
 
 describe('Api', () => {
     let api: Api;
@@ -283,6 +283,254 @@ describe('Api', () => {
             });
 
             await expect(api.get('/api/test')).rejects.toThrow('HTTP error! status: 401');
+        });
+    });
+
+    describe('bearer token', () => {
+        it('should add Authorization header with bearer token from synchronous function', async () => {
+            const mockResponse = { data: 'test' };
+            const token = 'my-secret-token';
+            
+            api.setBearerToken(() => token);
+            
+            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => mockResponse,
+                headers: new Headers({ 'content-type': 'application/json' }),
+            });
+
+            await api.get('/api/test');
+
+            expect(fetch).toHaveBeenCalledWith(
+                '/api/test',
+                expect.objectContaining({
+                    headers: expect.objectContaining({
+                        Authorization: `Bearer ${token}`,
+                    }),
+                })
+            );
+        });
+
+        it('should add Authorization header with bearer token from async function', async () => {
+            const mockResponse = { data: 'test' };
+            const token = 'async-token';
+            
+            api.setBearerToken(async () => {
+                await new Promise((resolve) => setTimeout(resolve, 10));
+                return token;
+            });
+            
+            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => mockResponse,
+                headers: new Headers({ 'content-type': 'application/json' }),
+            });
+
+            await api.get('/api/test');
+
+            expect(fetch).toHaveBeenCalledWith(
+                '/api/test',
+                expect.objectContaining({
+                    headers: expect.objectContaining({
+                        Authorization: `Bearer ${token}`,
+                    }),
+                })
+            );
+        });
+
+        it('should not add Authorization header when token getter returns null', async () => {
+            const mockResponse = { data: 'test' };
+            
+            api.setBearerToken(() => null);
+            
+            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => mockResponse,
+                headers: new Headers({ 'content-type': 'application/json' }),
+            });
+
+            await api.get('/api/test');
+
+            const fetchCall = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+            const headers = fetchCall[1]?.headers as Record<string, string>;
+            
+            expect(headers?.Authorization).toBeUndefined();
+        });
+
+        it('should include bearer token when retrying after 401', async () => {
+            const refreshHandler = vi.fn().mockResolvedValue(undefined);
+            const token = 'refreshed-token';
+            
+            api.setRefreshHandler(refreshHandler);
+            api.setBearerToken(() => token);
+
+            const mockResponse = { data: 'test' };
+
+            let callCount = 0;
+            (fetch as ReturnType<typeof vi.fn>).mockImplementation(() => {
+                callCount++;
+                if (callCount === 1) {
+                    return Promise.resolve({
+                        ok: false,
+                        status: 401,
+                        headers: new Headers(),
+                    });
+                }
+                return Promise.resolve({
+                    ok: true,
+                    status: 200,
+                    json: async () => mockResponse,
+                    headers: new Headers({ 'content-type': 'application/json' }),
+                });
+            });
+
+            await api.get('/api/test');
+
+            // Check that retry includes bearer token
+            const retryCall = (fetch as ReturnType<typeof vi.fn>).mock.calls[1];
+            const retryHeaders = retryCall[1]?.headers as Record<string, string>;
+            
+            expect(retryHeaders?.Authorization).toBe(`Bearer ${token}`);
+        });
+
+        it('should preserve existing headers when adding bearer token', async () => {
+            const mockResponse = { data: 'test' };
+            const token = 'my-token';
+            
+            api.setBearerToken(() => token);
+            
+            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => mockResponse,
+                headers: new Headers({ 'content-type': 'application/json' }),
+            });
+
+            await api.get('/api/test', {
+                headers: {
+                    'X-Custom-Header': 'custom-value',
+                },
+            });
+
+            const fetchCall = (fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+            const headers = fetchCall[1]?.headers as Record<string, string>;
+            
+            expect(headers?.Authorization).toBe(`Bearer ${token}`);
+            expect(headers?.['X-Custom-Header']).toBe('custom-value');
+        });
+    });
+
+    describe('external abort controller', () => {
+        it('should support external abort controller signal', async () => {
+            const mockResponse = { data: 'test' };
+            const externalController = new AbortController();
+            
+            (fetch as ReturnType<typeof vi.fn>).mockImplementation((url, options) => {
+                return new Promise((resolve, reject) => {
+                    // Check if signal is aborted
+                    if (options?.signal?.aborted) {
+                        const error = new Error('Aborted');
+                        error.name = 'AbortError';
+                        reject(error);
+                        return;
+                    }
+                    
+                    // Listen for abort
+                    options?.signal?.addEventListener('abort', () => {
+                        const error = new Error('Aborted');
+                        error.name = 'AbortError';
+                        reject(error);
+                    });
+                    
+                    // Simulate a delay
+                    setTimeout(() => {
+                        resolve({
+                            ok: true,
+                            status: 200,
+                            json: async () => mockResponse,
+                            headers: new Headers({ 'content-type': 'application/json' }),
+                        });
+                    }, 100);
+                });
+            });
+
+            const promise = api.get('/api/test', { signal: externalController.signal });
+            
+            // Abort externally before request completes
+            externalController.abort();
+            
+            await expect(promise).rejects.toThrow();
+        });
+
+        it('should not retry request if aborted by external signal', async () => {
+            const refreshHandler = vi.fn().mockResolvedValue(undefined);
+            const externalController = new AbortController();
+            
+            api.setRefreshHandler(refreshHandler);
+
+            let callCount = 0;
+            (fetch as ReturnType<typeof vi.fn>).mockImplementation(() => {
+                callCount++;
+                if (callCount === 1) {
+                    return Promise.resolve({
+                        ok: false,
+                        status: 401,
+                        headers: new Headers(),
+                    });
+                }
+                return Promise.resolve({
+                    ok: true,
+                    status: 200,
+                    json: async () => ({ data: 'test' }),
+                    headers: new Headers({ 'content-type': 'application/json' }),
+                });
+            });
+
+            const promise = api.get('/api/test', { signal: externalController.signal });
+            
+            // Abort externally before refresh completes
+            externalController.abort();
+            
+            await expect(promise).rejects.toThrow('Request was aborted by user');
+            
+            // Refresh should still be called
+            expect(refreshHandler).toHaveBeenCalledTimes(1);
+            // But retry should not happen (only 1 fetch call - the initial 401)
+            expect(callCount).toBe(1);
+        });
+
+        it('should combine internal and external abort signals', async () => {
+            const mockResponse = { data: 'test' };
+            const externalController = new AbortController();
+            
+            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => mockResponse,
+                headers: new Headers({ 'content-type': 'application/json' }),
+            });
+
+            // Request should succeed if neither signal is aborted
+            const result = await api.get('/api/test', { signal: externalController.signal });
+            expect(result).toEqual(mockResponse);
+        });
+
+        it('should work without external signal', async () => {
+            const mockResponse = { data: 'test' };
+            
+            (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => mockResponse,
+                headers: new Headers({ 'content-type': 'application/json' }),
+            });
+
+            // Should work normally without external signal
+            const result = await api.get('/api/test');
+            expect(result).toEqual(mockResponse);
         });
     });
 });
