@@ -1,25 +1,31 @@
-import { reatomForm, experimental_fieldArray } from "@reatom/core";
+import { reatomEnum, reatomField, reatomForm, withField } from "@reatom/core";
 import { z } from "zod";
+import { ALCOHOL_BOTTLE_TYPE_MAP, ALCOHOL_PERCENTAGE_MAP, ALCOHOLS, BOTTLE_SIZE_ML_MAP, TYPE_OF_BOTTLE, type SizeOfBottle } from "../lib";
 
-const drinkSchema = z.object({
-    alcoName: z.string().min(0),
-    alcoPercentage: z.number().min(0).max(100),
-    alcoGrams: z.number().min(0),
+export const alcoFormAtom = reatomForm(
+    {
+        name: reatomEnum(ALCOHOLS, { initState: 'Beer' }).extend(withField()),
+        percentage: reatomField(ALCOHOL_PERCENTAGE_MAP['Beer']),
+        typeOfBottle: reatomEnum(TYPE_OF_BOTTLE, { initState: ALCOHOL_BOTTLE_TYPE_MAP['Beer'][0] }).extend(withField()),
+        sizeOfBottle: reatomField(BOTTLE_SIZE_ML_MAP['Bottle'][0] as SizeOfBottle),
+        count: 1,
+    },
+    {
+        validateOnBlur: true,
+        schema: z.object({
+            name: z.literal(ALCOHOLS),
+            percentage: z.number(),
+            typeOfBottle: z.literal(TYPE_OF_BOTTLE),
+            count: z.number().min(0),
+        })
+    }
+)
+
+alcoFormAtom.fields.name.subscribe((value) => {
+    alcoFormAtom.fields.percentage.set(ALCOHOL_PERCENTAGE_MAP[value]);
+    alcoFormAtom.fields.typeOfBottle.set(ALCOHOL_BOTTLE_TYPE_MAP[value][0]);
 });
 
-const alcoFormSchema = z.array(drinkSchema);
-
-export const alcoFormAtom = reatomForm({
-    drinks: experimental_fieldArray({
-        initState: [{alcoName: '', alcoPercentage: 0, alcoGrams: 0}],
-        create: (params: z.infer<typeof drinkSchema>) => {
-            return drinkSchema.parse(params);
-        },
-    })
-}, {
-    name: 'alcoForm',
-    schema: alcoFormSchema,
-    async onSubmit(state) {
-        console.log("state", state);
-    }
-})
+alcoFormAtom.fields.typeOfBottle.subscribe((value) => {
+    alcoFormAtom.fields.sizeOfBottle.set(BOTTLE_SIZE_ML_MAP[value][0] as SizeOfBottle);
+});

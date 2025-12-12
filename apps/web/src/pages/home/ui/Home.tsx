@@ -1,5 +1,5 @@
 import { reatomComponent } from "@reatom/react";
-import { Card, Typography, Space } from "antd";
+import { Card, Typography, Flex } from "antd";
 import { AlcoForm } from "../../../features/alco-form";
 
 const { Title, Text } = Typography;
@@ -17,12 +17,12 @@ export const Home = reatomComponent(
             }}>
                 <Card 
                     style={{ 
-                        maxWidth: 500, 
+                        maxWidth: 700, 
                         width: "100%",
                         boxShadow: "0 8px 24px rgba(0,0,0,0.12)"
                     }}
                 >
-                    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+                    <Flex vertical gap={16}>
                         <div style={{ textAlign: "center" }}>
                             <Title level={2} style={{ marginBottom: 8 }}>
                                 Welcome to Alco Tester
@@ -32,7 +32,7 @@ export const Home = reatomComponent(
                             </Text>
                         </div>
                         <AlcoForm />
-                    </Space>
+                    </Flex>
                 </Card>
             </div>
         );
