@@ -1,7 +1,6 @@
 import { reatomComponent } from "@reatom/react";
 import { Card, Typography, Flex } from "antd";
 import { AlcoForm } from "../../../features/alco-form";
-import { AlcoCollectData } from "../../../features/alco-collect-data";
 
 const { Title, Text } = Typography;
 
@@ -33,7 +32,6 @@ export const Home = reatomComponent(
                             </Text>
                         </div>
                         <AlcoForm />
-                        <AlcoCollectData />
                     </Flex>
                 </Card>
             </div>

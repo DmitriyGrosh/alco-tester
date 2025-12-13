@@ -1,75 +1,55 @@
-import { atom, computed, experimental_fieldArray, reatomEnum, reatomField, reatomForm, withField, reatomArray } from "@reatom/core";
+import { experimental_fieldArray, reatomField, reatomForm, throwAbort, withComputed } from "@reatom/core";
 import { z } from "zod";
-import { ALCOHOL_BOTTLE_TYPE_MAP, ALCOHOL_PERCENTAGE_MAP, ALCOHOLS, BOTTLE_SIZE_ML_MAP, TYPE_OF_BOTTLE, type SizeOfBottle } from "../lib";
-
-// export const alcoFormAtom = reatomForm(
-//     {
-//         name: reatomEnum(ALCOHOLS, { initState: 'Beer' }).extend(withField()),
-//         percentage: reatomField(ALCOHOL_PERCENTAGE_MAP['Beer']),
-//         typeOfBottle: reatomEnum(TYPE_OF_BOTTLE, { initState: ALCOHOL_BOTTLE_TYPE_MAP['Beer'][0] }).extend(withField()),
-//         sizeOfBottle: reatomField(BOTTLE_SIZE_ML_MAP['Bottle'][0] as SizeOfBottle),
-//         count: 1,
-//     },
-//     {
-//         validateOnBlur: true,
-//         schema: z.object({
-//             name: z.literal(ALCOHOLS),
-//             percentage: z.number(),
-//             typeOfBottle: z.literal(TYPE_OF_BOTTLE),
-//             count: z.number().min(0),
-//         })
-//     }
-// )
-
-// alcoFormAtom.fields.name.subscribe((value) => {
-//     alcoFormAtom.fields.percentage.set(ALCOHOL_PERCENTAGE_MAP[value]);
-//     alcoFormAtom.fields.typeOfBottle.set(ALCOHOL_BOTTLE_TYPE_MAP[value][0]);
-// });
-
-// alcoFormAtom.fields.typeOfBottle.subscribe((value) => {
-//     alcoFormAtom.fields.sizeOfBottle.set(BOTTLE_SIZE_ML_MAP[value][0] as SizeOfBottle);
-// });
+import { ALCOHOL_BOTTLE_TYPE_MAP, ALCOHOL_PERCENTAGE_MAP, ALCOHOLS, BOTTLE_SIZE_ML_MAP, TYPE_OF_BOTTLE, type AlcoholType, type SizeOfBottle, type TypeOfBottle } from "../lib";
 
 export const alcoFormListAtom = reatomForm(
     {
         drinks: experimental_fieldArray({
             initState: [{
-                name: "Beer",
+                name: "Beer" as AlcoholType,
                 percentage: ALCOHOL_PERCENTAGE_MAP['Beer'],
-                typeOfBottle: ALCOHOL_BOTTLE_TYPE_MAP['Beer'][0],
-                sizeOfBottle: BOTTLE_SIZE_ML_MAP['Bottle'][0],
+                typeOfBottle: ALCOHOL_BOTTLE_TYPE_MAP['Beer'][0] as TypeOfBottle,
+                sizeOfBottle: BOTTLE_SIZE_ML_MAP['Bottle'][0] as SizeOfBottle,
                 count: 1,
             }],
-            create: ({ name, percentage, typeOfBottle, sizeOfBottle, count }) => ({
-                name,
-                percentage,
-                typeOfBottle,
-                sizeOfBottle,
-                count,
-            })
+            create: ({ name, percentage, typeOfBottle, sizeOfBottle, count }, groupName) => {
+                const nameField = reatomField(name, `${groupName}.name`);
+                const percentageField = reatomField(percentage, {
+                    name: `${groupName}.percentage`,
+                    fromState: (state) => state.toString(),
+                    toState: (value: string) => {
+                      const parsed = Number(value)
+                      return isNaN(parsed) ? throwAbort() : parsed
+                    }
+                }).extend(withComputed(() => ALCOHOL_PERCENTAGE_MAP[nameField.value()]));
+                const typeOfBottleField = reatomField(typeOfBottle, `${groupName}.typeOfBottle`).extend(withComputed(() => ALCOHOL_BOTTLE_TYPE_MAP[nameField.value()][0]));
+                const sizeOfBottleField = reatomField(sizeOfBottle, `${groupName}.sizeOfBottle`).extend(withComputed(() => BOTTLE_SIZE_ML_MAP[typeOfBottleField.value()][0]));
+                const countField = reatomField(count, {
+                    name: `${groupName}.count`,
+                    fromState: (state) => {
+                        console.log("state", state)
+                        return state.toString()
+                    },
+                    toState: (value: string) => {
+                      const parsed = Number(value)
+                      console.log("parsed", parsed)
+                      return isNaN(parsed) ? throwAbort() : parsed
+                    }
+                });
+
+                return { name: nameField, percentage: percentageField, typeOfBottle: typeOfBottleField, sizeOfBottle: sizeOfBottleField, count: countField };
+            }
         })
     },
     {
         validateOnBlur: true,
         schema: z.array(
             z.object({
-            name: z.literal(ALCOHOLS),
-            percentage: z.number(),
-            typeOfBottle: z.literal(TYPE_OF_BOTTLE),
-            count: z.number().min(0),
-        })
+                name: z.literal(ALCOHOLS),
+                percentage: z.number(),
+                typeOfBottle: z.literal(TYPE_OF_BOTTLE),
+                count: z.number().min(1),
+            })
         )
     }
 )
-
-const drinksAtom = reatomArray([
-    {
-        name: "Beer",
-        percentage: ALCOHOL_PERCENTAGE_MAP['Beer'],
-        typeOfBottle: ALCOHOL_BOTTLE_TYPE_MAP['Beer'][0],
-        sizeOfBottle: BOTTLE_SIZE_ML_MAP['Bottle'][0],
-        count: 1,
-    }
-]);
-
-drinksAtom.push()
