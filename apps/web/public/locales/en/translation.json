@@ -1,0 +1,55 @@
+{
+  "alcoForm": {
+    "addDrink": "Add Drink",
+    "submit": "Submit",
+    "alcoName": "Alco Name",
+    "percentage": "Alco Percentage",
+    "typeOfBottle": "Type of bottle",
+    "sizeOfBottle": "Size of bottle",
+    "count": "Count of drinks",
+    "options": {
+      "alco": {
+        "Absent": "Absent",
+        "Beer": "Beer",
+        "Wine": "Wine",
+        "Vodka": "Vodka",
+        "Whiskey": "Whiskey",
+        "Rum": "Rum",
+        "Tequila": "Tequila",
+        "Gin": "Gin",
+        "Champagne": "Champagne",
+        "Brandy": "Brandy",
+        "Other": "Other"
+      },
+      "bottleType": {
+        "Bottle": "Bottle",
+        "Pint": "Pint",
+        "Glass": "Glass",
+        "Shot": "Shot",
+        "Other": "Other"
+      }
+    }
+  },
+  "header": {
+    "title": "Alco Tester"
+  },
+  "home": {
+    "title": "Welcome to Alco Tester",
+    "description": "Enter the amount of alcohol you've consumed to get started",
+    "modes": {
+      "list": {
+        "title": "Select all drinks for last night",
+        "description": "Quick and simple. Ideal for estimating peak alcohol level."
+      },
+      "timeline": {
+        "title": "Set all drinks in timeline of night",
+        "description": "Accurate calculation. Intoxication graph and time to full sobriety.",
+        "placeholder": "Timeline mode coming soon..."
+      },
+      "back": "Back"
+    }
+  },
+  "units": {
+    "ml": "ml"
+  }
+}

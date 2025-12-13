@@ -1,107 +1,107 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { network } from './network';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { network } from "./network";
 
 // Mock fetch globally
-(globalThis as Record<string, unknown>).fetch = vi.fn()
+(globalThis as Record<string, unknown>).fetch = vi.fn();
 
-describe('Network', () => {
+describe("Network", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
-    network.setBaseURL('')
-    network.setDefaultHeaders({})
-  })
+    vi.clearAllMocks();
+    network.setBaseURL("");
+    network.setDefaultHeaders({});
+  });
 
-  describe('get', () => {
-    it('should make a GET request', async () => {
-      const mockResponse = { data: 'test' }
-      ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+  describe("get", () => {
+    it("should make a GET request", async () => {
+      const mockResponse = { data: "test" };
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
-        headers: new Headers({ 'content-type': 'application/json' }),
-      })
+        headers: new Headers({ "content-type": "application/json" }),
+      });
 
-      const result = await network.get('/api/test')
+      const result = await network.get("/api/test");
 
       expect(fetch).toHaveBeenCalledWith(
-        '/api/test',
+        "/api/test",
         expect.objectContaining({
-          method: 'GET',
-        })
-      )
-      expect(result).toEqual(mockResponse)
-    })
-  })
+          method: "GET",
+        }),
+      );
+      expect(result).toEqual(mockResponse);
+    });
+  });
 
-  describe('post', () => {
-    it('should make a POST request with body', async () => {
-      const mockResponse = { id: 1, name: 'John' }
-      const requestBody = { name: 'John' }
-      ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+  describe("post", () => {
+    it("should make a POST request with body", async () => {
+      const mockResponse = { id: 1, name: "John" };
+      const requestBody = { name: "John" };
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
-        headers: new Headers({ 'content-type': 'application/json' }),
-      })
+        headers: new Headers({ "content-type": "application/json" }),
+      });
 
-      const result = await network.post('/api/users', requestBody)
+      const result = await network.post("/api/users", requestBody);
 
       expect(fetch).toHaveBeenCalledWith(
-        '/api/users',
+        "/api/users",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify(requestBody),
           headers: expect.objectContaining({
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           }),
-        })
-      )
-      expect(result).toEqual(mockResponse)
-    })
-  })
+        }),
+      );
+      expect(result).toEqual(mockResponse);
+    });
+  });
 
-  describe('baseURL', () => {
-    it('should prepend baseURL to relative URLs', async () => {
-      network.setBaseURL('https://api.example.com')
-      ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+  describe("baseURL", () => {
+    it("should prepend baseURL to relative URLs", async () => {
+      network.setBaseURL("https://api.example.com");
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         json: async () => ({}),
-        headers: new Headers({ 'content-type': 'application/json' }),
-      })
+        headers: new Headers({ "content-type": "application/json" }),
+      });
 
-      await network.get('/users')
+      await network.get("/users");
 
       expect(fetch).toHaveBeenCalledWith(
-        'https://api.example.com/users',
-        expect.any(Object)
-      )
-    })
+        "https://api.example.com/users",
+        expect.any(Object),
+      );
+    });
 
-    it('should not modify absolute URLs', async () => {
-      ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    it("should not modify absolute URLs", async () => {
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         json: async () => ({}),
-        headers: new Headers({ 'content-type': 'application/json' }),
-      })
+        headers: new Headers({ "content-type": "application/json" }),
+      });
 
-      await network.get('https://external-api.com/data')
+      await network.get("https://external-api.com/data");
 
       expect(fetch).toHaveBeenCalledWith(
-        'https://external-api.com/data',
-        expect.any(Object)
-      )
-    })
-  })
+        "https://external-api.com/data",
+        expect.any(Object),
+      );
+    });
+  });
 
-  describe('error handling', () => {
-    it('should throw error on non-ok response', async () => {
-      ;(fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+  describe("error handling", () => {
+    it("should throw error on non-ok response", async () => {
+      (fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,
         status: 404,
         headers: new Headers(),
-      })
+      });
 
-      await expect(network.get('/api/not-found')).rejects.toThrow(
-        'HTTP error! status: 404'
-      )
-    })
-  })
-})
+      await expect(network.get("/api/not-found")).rejects.toThrow(
+        "HTTP error! status: 404",
+      );
+    });
+  });
+});

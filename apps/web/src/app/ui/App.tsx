@@ -1,6 +1,8 @@
-import { Routes } from '../../pages';
-import '../lib/setup';
+import { Routes } from "../../pages";
+
+import "../lib/setup";
+import "../lib/i18n";
 
 export const App = () => {
-  return <Routes />
-}
+  return <Routes />;
+};
