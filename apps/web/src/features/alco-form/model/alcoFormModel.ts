@@ -43,13 +43,15 @@ export const alcoFormListAtom = reatomForm(
     },
     {
         validateOnBlur: true,
-        schema: z.array(
-            z.object({
-                name: z.literal(ALCOHOLS),
-                percentage: z.number(),
-                typeOfBottle: z.literal(TYPE_OF_BOTTLE),
-                count: z.number().min(1),
-            })
-        )
+        schema: z.object({
+            drinks: z.array(
+                z.object({
+                    name: z.literal(ALCOHOLS),
+                    percentage: z.number(),
+                    typeOfBottle: z.literal(TYPE_OF_BOTTLE),
+                    count: z.number().min(1),
+                })
+            )
+        })
     }
 )

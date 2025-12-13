@@ -32,7 +32,7 @@ export const AlcoForm = reatomComponent(() => {
                             <Typography.Title level={5}>Alco Name</Typography.Title>
                             <Select 
                                 options={ALCO_OPTIONS}
-                                status={drink.name.validation().triggered ? "error" : undefined}
+                                status={drink.name.validation().triggered && drink.name.validation().error ? "error" : undefined}
                                 {...bindField(drink.name)}
                             />
                             {drink.name.validation().triggered && (
@@ -43,7 +43,7 @@ export const AlcoForm = reatomComponent(() => {
                             <Typography.Title level={5}>Alco Percentage</Typography.Title>
                             <Input
                                 type="number"
-                                status={drink.percentage.validation().triggered ? "error" : undefined}
+                                status={drink.percentage.validation().triggered && drink.percentage.validation().error ? "error" : undefined}
                                 {...bindField(drink.percentage)}
                              />
                             {drink.percentage.validation().triggered && (
@@ -54,7 +54,7 @@ export const AlcoForm = reatomComponent(() => {
                             <Typography.Title level={5}>Type of bottle</Typography.Title>
                             <Select 
                                 options={ALCOHOL_BOTTLE_TYPE_OPTIONS_MAP[drink.name.value()]}
-                                status={drink.typeOfBottle.validation().triggered ? "error" : undefined}
+                                status={drink.typeOfBottle.validation().triggered && drink.typeOfBottle.validation().error ? "error" : undefined}
                                 {...bindField(drink.typeOfBottle)}
                             />
                             {drink.typeOfBottle.validation().triggered && (
@@ -66,7 +66,7 @@ export const AlcoForm = reatomComponent(() => {
                             <Select 
                                 options={BOTTLE_SIZE_OPTIONS_MAP[drink.typeOfBottle.value()]}
                                 disabled={!drink.typeOfBottle.value()}
-                                status={drink.sizeOfBottle.validation().triggered ? "error" : undefined}
+                                status={drink.sizeOfBottle.validation().triggered && drink.sizeOfBottle.validation().error ? "error" : undefined}
                                 {...bindField(drink.sizeOfBottle)}
                             />
                             {drink.sizeOfBottle.validation().triggered && (
@@ -77,7 +77,7 @@ export const AlcoForm = reatomComponent(() => {
                             <Typography.Title level={5}>Count of drinks</Typography.Title>
                             <Input
                                 type="number"
-                                status={drink.count.validation().triggered ? "error" : undefined}
+                                status={drink.count.validation().triggered && drink.count.validation().error ? "error" : undefined}
                                 {...bindField(drink.count)}
                             />
                             {drink.count.validation().triggered && (
