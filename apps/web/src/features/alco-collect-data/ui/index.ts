@@ -1,1 +1,0 @@
-export { AlcoCollectData } from './AlcoCollectData';

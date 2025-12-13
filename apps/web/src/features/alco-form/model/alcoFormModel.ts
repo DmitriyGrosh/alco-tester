@@ -47,7 +47,7 @@ export const alcoFormListAtom = reatomForm(
             drinks: z.array(
                 z.object({
                     name: z.literal(ALCOHOLS),
-                    percentage: z.number(),
+                    percentage: z.number().min(0),
                     typeOfBottle: z.literal(TYPE_OF_BOTTLE),
                     count: z.number().min(1),
                 })
