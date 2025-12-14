@@ -1,40 +1,14 @@
 import {
   ALCOHOL_BOTTLE_TYPE_MAP,
-  ALCOHOL_PERCENTAGE_MAP,
   ALCOHOLS,
   BOTTLE_SIZE_ML_MAP,
   type AlcoholType,
 } from "../lib";
-import { alcoFormListAtom } from "./alcoFormModel";
 import { useTranslation } from "react-i18next";
-import { type FormEvent, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 
 export const useBehavior = () => {
   const { t } = useTranslation();
-  const { fields: drinksFields, submit } = alcoFormListAtom;
-
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    submit();
-  };
-
-  const onAddDrink = () => {
-    drinksFields.drinks.create({
-      name: "Beer",
-      percentage: ALCOHOL_PERCENTAGE_MAP["Beer"],
-      typeOfBottle: ALCOHOL_BOTTLE_TYPE_MAP["Beer"][0],
-      sizeOfBottle: BOTTLE_SIZE_ML_MAP["Bottle"][0],
-      count: 1,
-      breakTime: null,
-    });
-  };
-
-  const onRemoveDrink = (index: number) => {
-    const drinks = drinksFields.drinks.array();
-    if (drinks[index]) {
-      drinksFields.drinks.remove(drinks[index]);
-    }
-  };
 
   const alcoOptions = useMemo(
     () =>
@@ -66,9 +40,6 @@ export const useBehavior = () => {
   );
 
   return {
-    onSubmit,
-    onAddDrink,
-    onRemoveDrink,
     alcoOptions,
     getBottleTypeOptions,
     getBottleSizeOptions,

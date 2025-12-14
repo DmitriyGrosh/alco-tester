@@ -28,7 +28,7 @@ export const calculateWidmark = (
   weight: number,
   gender: "male" | "female",
   start: Dayjs,
-  end: Dayjs
+  end: Dayjs,
 ): DetailedWidmarkResult => {
   // Widmark factor
   const r = gender === "male" ? 0.7 : 0.6;
@@ -52,32 +52,32 @@ export const calculateWidmark = (
   // Calculation function for time
   const calculateTime = (resorption: number, beta: number) => {
     const eliminationTime = permille > 0 ? permille / beta : 0;
-    
+
     // Standard calculation: Resorption Phase + Elimination Phase
     let totalHours = resorption + eliminationTime;
     let soberDate = start.add(totalHours * 60, "minute");
-    
+
     // 1. Peak Correction (for display purposes)
     // If drinking over a long time, the peak is lower because elimination happened during drinking.
     // Assuming constant elimination (zero-order) during drinking if C > 0.
     // Effective Peak ~ C0 - (beta * duration).
     // If duration is very long (slow drinking), peak might be very low.
-    // Note: This is an estimation. 
-    
+    // Note: This is an estimation.
+
     // 2. Sober Time Correction (Edge Case)
     // If the calculated sober date is BEFORE the end of drinking (plus absorption),
-    // it means the user drank slower than they eliminated. 
+    // it means the user drank slower than they eliminated.
     // In that case, they are "sober" shortly after the last drink.
     const minimumSoberDate = end.add(resorption * 60, "minute");
-    
+
     if (soberDate.isBefore(minimumSoberDate)) {
-        soberDate = minimumSoberDate;
-        // Recalculate totalHours from start to new soberDate
-        totalHours = soberDate.diff(start, "hour", true);
+      soberDate = minimumSoberDate;
+      // Recalculate totalHours from start to new soberDate
+      totalHours = soberDate.diff(start, "hour", true);
     }
 
     const totalMinutes = totalHours * 60;
-    
+
     return {
       hours: Math.floor(totalMinutes / 60),
       minutes: Math.round(totalMinutes % 60),
@@ -100,8 +100,8 @@ export const calculateWidmark = (
     percentByVolume, // Процентное содержание алкоголя в крови (% BAC)
     plasma, // Концентрация в плазме крови (г/л)
     breath, // Концентрация в выдыхаемом воздухе (мг/л). РФ: > 0.16 мг/л — лишение прав.
-    minTime: calculateTime(0.5, 0.20), // Минимальное время трезвости (быстрый метаболизм)
+    minTime: calculateTime(0.5, 0.2), // Минимальное время трезвости (быстрый метаболизм)
     avgTime: calculateTime(0.75, 0.15), // Среднее время трезвости (нормальный метаболизм)
-    maxTime: calculateTime(1.0, 0.10), // Максимальное время трезвости (медленный метаболизм)
+    maxTime: calculateTime(1.0, 0.1), // Максимальное время трезвости (медленный метаболизм)
   };
 };

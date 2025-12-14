@@ -2,17 +2,16 @@ import { reatomComponent } from "@reatom/react";
 import { Card, Flex } from "antd";
 import {
   AlcoCountOfDrinksField,
-  alcoFormListAtom,
   AlcoNameField,
   AlcoPercantageField,
   AlcoSizeOfBottleField,
   AlcoTypeOfBottleField,
 } from "../../../entities/alcohol";
 import { BreakTimeButton } from "./BreakTimeButton";
+import { useBehavior } from "../model";
 
 export const AllDrinksForm = reatomComponent(() => {
-  const { fields } = alcoFormListAtom;
-  const drinks = fields.drinks.array();
+  const { drinks  } = useBehavior();
   const isLastDrink = (index: number) => drinks.length === index + 1;
 
   return (

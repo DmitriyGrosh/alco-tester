@@ -1,7 +1,7 @@
 import { reatomComponent, bindField } from "@reatom/react";
 import { DatePicker, Flex, Form, InputNumber, Modal, Select } from "antd";
 import { useTranslation } from "react-i18next";
-import { durationFormAtom } from "../model";
+import { useBehavior } from "../model";
 
 interface Props {
   open: boolean;
@@ -10,7 +10,7 @@ interface Props {
 
 export const ModalDuration = reatomComponent<Props>(({ open, onClose }) => {
   const { t } = useTranslation();
-  const { fields, submit } = durationFormAtom;
+  const { durationFields, submit } = useBehavior();
 
   return (
     <Modal
@@ -26,38 +26,39 @@ export const ModalDuration = reatomComponent<Props>(({ open, onClose }) => {
           <Form.Item
             label={t("alcoForm.drinkingStart")}
             validateStatus={
-              fields.start.validation().triggered && fields.start.validation().error
+              durationFields.start.validation().triggered &&
+              durationFields.start.validation().error
                 ? "error"
                 : ""
             }
             help={
-              fields.start.validation().triggered &&
-              fields.start.validation().error
+              durationFields.start.validation().triggered &&
+              durationFields.start.validation().error
             }
           >
             <DatePicker
               showTime
               style={{ width: "100%" }}
               format="DD.MM.YYYY HH:mm"
-              {...bindField(fields.start)}
+              {...bindField(durationFields.start)}
             />
           </Form.Item>
           <Form.Item
             label={t("alcoForm.drinkingEnd")}
             validateStatus={
-              fields.end.validation().triggered && fields.end.validation().error
+              durationFields.end.validation().triggered && durationFields.end.validation().error
                 ? "error"
                 : ""
             }
             help={
-              fields.end.validation().triggered && fields.end.validation().error
+              durationFields.end.validation().triggered && durationFields.end.validation().error
             }
           >
             <DatePicker
               showTime
               style={{ width: "100%" }}
               format="DD.MM.YYYY HH:mm"
-              {...bindField(fields.end)}
+              {...bindField(durationFields.end)}
             />
           </Form.Item>
         </Flex>
@@ -65,14 +66,14 @@ export const ModalDuration = reatomComponent<Props>(({ open, onClose }) => {
           <Form.Item
             label={t("alcoForm.weight")}
             validateStatus={
-              fields.weight.validation().triggered &&
-              fields.weight.validation().error
+              durationFields.weight.validation().triggered &&
+              durationFields.weight.validation().error
                 ? "error"
                 : ""
             }
             help={
-              fields.weight.validation().triggered &&
-              fields.weight.validation().error
+              durationFields.weight.validation().triggered &&
+              durationFields.weight.validation().error
             }
           >
             <InputNumber
@@ -80,20 +81,20 @@ export const ModalDuration = reatomComponent<Props>(({ open, onClose }) => {
               max={300}
               style={{ width: "100%", maxWidth: 100 }}
               suffix={t("units.kg")}
-              {...bindField(fields.weight)}
+              {...bindField(durationFields.weight)}
             />
           </Form.Item>
           <Form.Item
             label={t("alcoForm.gender")}
             validateStatus={
-              fields.gender.validation().triggered &&
-              fields.gender.validation().error
+              durationFields.gender.validation().triggered &&
+              durationFields.gender.validation().error
                 ? "error"
                 : ""
             }
             help={
-              fields.gender.validation().triggered &&
-              fields.gender.validation().error
+              durationFields.gender.validation().triggered &&
+              durationFields.gender.validation().error
             }
           >
             <Select
@@ -102,25 +103,25 @@ export const ModalDuration = reatomComponent<Props>(({ open, onClose }) => {
                 { value: "male", label: t("alcoForm.genderMale") },
                 { value: "female", label: t("alcoForm.genderFemale") },
               ]}
-              {...bindField(fields.gender)}
+              {...bindField(durationFields.gender)}
             />
           </Form.Item>
           <Form.Item
             label={t("alcoForm.age")}
             validateStatus={
-              fields.age.validation().triggered && fields.age.validation().error
+              durationFields.age.validation().triggered && durationFields.age.validation().error
                 ? "error"
                 : ""
             }
             help={
-              fields.age.validation().triggered && fields.age.validation().error
+              durationFields.age.validation().triggered && durationFields.age.validation().error
             }
           >
             <InputNumber
               min={18}
               max={100}
               style={{ width: "100%" }}
-              {...bindField(fields.age)}
+              {...bindField(durationFields.age)}
             />
           </Form.Item>
         </Flex>

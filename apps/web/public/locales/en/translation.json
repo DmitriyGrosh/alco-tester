@@ -2,10 +2,12 @@
   "alcoForm": {
     "addDrink": "Add Drink",
     "drinkingStart": "Start drinking",
+    "drinkingTime": "Drink time",
     "drinkingEnd": "End drinking",
     "breakBetweenDrinks": "Break between drinks",
     "cancel": "Cancel",
     "weight": "Weight",
+    "height": "Height",
     "age": "Age",
     "gender": "Gender",
     "genderMale": "Male",
@@ -20,6 +22,7 @@
       "2hours": "2 hours"
     },
     "submit": "Submit",
+    "calculate": "Calculate",
     "whenISober": "When I sober?",
     "alcoName": "Alco Name",
     "percentage": "Alco Percentage",
@@ -69,7 +72,8 @@
       "timeline": {
         "title": "Set all drinks in timeline of night",
         "description": "Accurate calculation. Intoxication graph and time to full sobriety.",
-        "placeholder": "Timeline mode coming soon..."
+        "placeholder": "Timeline mode coming soon...",
+        "calculatorTitle": "Timeline ADE Calculator"
       },
       "back": "Back"
     }
@@ -77,6 +81,7 @@
   "units": {
     "ml": "ml",
     "g": "g",
-    "kg": "kg"
+    "kg": "kg",
+    "cm": "cm"
   }
 }

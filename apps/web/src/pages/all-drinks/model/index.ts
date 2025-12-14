@@ -1,1 +1,1 @@
-export * from "./durationFormModel";
+export * from "./useBehavior";

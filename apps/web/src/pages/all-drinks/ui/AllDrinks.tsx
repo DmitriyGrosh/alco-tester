@@ -5,10 +5,10 @@ import { allDrinksRoute } from "../../../shared/routing";
 import { Sidebar } from "../../../shared/ui";
 import { AllDrinksForm } from "./AllDrinksForm";
 import { PlusOutlined } from "@ant-design/icons";
-import { useBehavior } from "../../../entities/alcohol";
+import { useBehavior } from "../model";
 import { ModalDuration } from "./ModalDuration";
 import { useState } from "react";
-import { AllDrinksSidebar } from "./AllDrinksSidebar";
+import { AllDrinksSidebar } from "../../../entities/alcohol";
 
 export const AllDrinks = reatomComponent(() => {
   const { t } = useTranslation();
@@ -17,6 +17,7 @@ export const AllDrinks = reatomComponent(() => {
   const { onAddDrink } = useBehavior();
   const [open, setOpen] = useState(false);
   const onClose = () => setOpen(false);
+  const { onRemoveDrink, drinksSidebar } = useBehavior();
 
   if (!allDrinksRoute.exact()) {
     return null;
@@ -25,11 +26,20 @@ export const AllDrinks = reatomComponent(() => {
   return (
     <Sidebar
       onClose={() => allDrinksRoute.go({ drawer: "hide" })}
-      sidebar={<AllDrinksSidebar />}
+      sidebar={<AllDrinksSidebar drinks={drinksSidebar} onRemoveDrink={onRemoveDrink} />}
       isDrawer={params?.drawer === "show"}
     >
-      <Flex vertical style={{ minHeight: "100%" }}>
-        <Flex vertical gap={16} style={{ padding: 16, flex: 1 }}>
+      <Flex vertical style={{ height: "100%" }}>
+        <Flex
+          vertical
+          gap={16}
+          style={{
+            padding: 16,
+            flex: 1,
+            overflowY: "auto",
+            minHeight: 0,
+          }}
+        >
           <Flex vertical gap={4}>
             <Typography.Title level={2} style={{ margin: 0 }}>
               {t("home.modes.list.title")}
@@ -48,8 +58,7 @@ export const AllDrinks = reatomComponent(() => {
         <Flex
           gap={4}
           style={{
-            position: "sticky",
-            bottom: 0,
+            flexShrink: 0,
             padding: 16,
             background: token.colorBgContainer,
             borderTop: `1px solid ${token.colorBorderSecondary}`,

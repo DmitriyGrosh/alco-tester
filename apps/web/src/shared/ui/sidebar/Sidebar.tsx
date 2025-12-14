@@ -31,7 +31,6 @@ const useMediaQuery = (query: string) => {
 export const Sidebar = reatomComponent<SidebarProps>(
   ({ children, sidebar, isDrawer, onClose }) => {
     const isMobile = useMediaQuery("(max-width: 768px)");
-    console.log("isMobile", isMobile);
 
     return (
       <Layout style={{ height: "100%", background: "transparent" }}>

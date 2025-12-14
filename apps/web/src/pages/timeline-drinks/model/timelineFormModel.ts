@@ -1,11 +1,15 @@
 import {
-  experimental_fieldArray,
-  reatomField,
   reatomForm,
-  throwAbort,
+  reatomField,
+  experimental_fieldArray,
   withComputed,
+  throwAbort,
+  // computed,
+  atom,
 } from "@reatom/core";
 import { z } from "zod";
+// import dayjs, { Dayjs } from "dayjs";
+import { calculateAde, type TimelineDrink, type AdePoint } from "../lib";
 import {
   ALCOHOL_BOTTLE_TYPE_MAP,
   ALCOHOL_PERCENTAGE_MAP,
@@ -15,10 +19,29 @@ import {
   type AlcoholType,
   type SizeOfBottle,
   type TypeOfBottle,
-} from "../lib";
+} from "../../../entities/alcohol";
 
-export const alcoFormListAtom = reatomForm(
+export const adeResultAtom = atom<AdePoint[]>([], "adeResultAtom");
+
+export const timelineFormAtom = reatomForm(
   {
+    weight: reatomField(70, {
+      name: "weight",
+      fromState: (state) => state.toString(),
+      toState: (value: string) => {
+        const parsed = Number(value);
+        return isNaN(parsed) ? throwAbort() : parsed;
+      },
+    }),
+    height: reatomField(170, {
+      name: "height",
+      fromState: (state) => state.toString(),
+      toState: (value: string) => {
+        const parsed = Number(value);
+        return isNaN(parsed) ? throwAbort() : parsed;
+      },
+    }),
+    gender: reatomField<"male" | "female">("male", "gender"),
     drinks: experimental_fieldArray({
       initState: [
         {
@@ -27,11 +50,12 @@ export const alcoFormListAtom = reatomForm(
           typeOfBottle: ALCOHOL_BOTTLE_TYPE_MAP["Beer"][0] as TypeOfBottle,
           sizeOfBottle: BOTTLE_SIZE_ML_MAP["Bottle"][0] as SizeOfBottle,
           count: 1,
-          breakTime: null as string | null,
+          time: null,
+          id: crypto.randomUUID(),
         },
       ],
       create: (
-        { name, percentage, typeOfBottle, sizeOfBottle, count, breakTime },
+        { name, percentage, typeOfBottle, sizeOfBottle, count, time, id },
         groupName,
       ) => {
         const nameField = reatomField(name, `${groupName}.name`);
@@ -70,31 +94,51 @@ export const alcoFormListAtom = reatomForm(
           },
         });
 
-        const breakTimeField = reatomField(breakTime, `${groupName}.breakTime`);
-
         return {
           name: nameField,
           percentage: percentageField,
           typeOfBottle: typeOfBottleField,
           sizeOfBottle: sizeOfBottleField,
           count: countField,
-          breakTime: breakTimeField,
+          time,
+          id,
         };
       },
     }),
   },
   {
+    name: "timelineFormAtom",
     validateOnBlur: true,
     schema: z.object({
+      weight: z.number().min(30).max(300),
+      height: z.number().min(100).max(250),
+      gender: z.enum(["male", "female"]),
       drinks: z.array(
         z.object({
           name: z.literal(ALCOHOLS),
           percentage: z.number().min(0),
           typeOfBottle: z.literal(TYPE_OF_BOTTLE),
+          sizeOfBottle: z.number().min(1),
           count: z.number().min(1),
-          breakTime: z.string().nullable().optional(),
+          time: z.any(),
+          id: z.string(),
         }),
-      ),
+      ), // Simplified validation for now
     }),
+    onSubmit(state) {
+      const drinks: TimelineDrink[] = state.drinks.map((d) => ({
+        id: d.id,
+        volume: d.sizeOfBottle * d.count,
+        percentage: d.percentage,
+        time: d.time,
+      }));
+
+      const data = calculateAde(drinks, {
+        weight: state.weight,
+        gender: state.gender,
+      });
+      adeResultAtom.set(data);
+      console.log("state", data);
+    },
   },
 );
