@@ -15,7 +15,7 @@ export const AlcoTypeOfBottleField = reatomComponent<Props>(
     const { t } = useTranslation();
     const { getBottleTypeOptions } = useBehavior();
     return (
-      <Flex style={{ minWidth: 200 }} vertical gap={4} flex={1}>
+      <Flex style={{ minWidth: 150 }} vertical gap={4} flex={1}>
         <Typography.Title level={5}>
           {t("alcoForm.typeOfBottle")}
         </Typography.Title>

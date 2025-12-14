@@ -3,12 +3,20 @@ import { Button, Flex, Typography, theme } from "antd";
 import { useTranslation } from "react-i18next";
 import { allDrinksRoute } from "../../../shared/routing";
 import { Sidebar } from "../../../shared/ui";
+import { AllDrinksForm } from "./AllDrinksForm";
+import { PlusOutlined } from "@ant-design/icons";
+import { useBehavior } from "../../../entities/alcohol";
+import { ModalDuration } from "./ModalDuration";
+import { useState } from "react";
+import { AllDrinksSidebar } from "./AllDrinksSidebar";
 
 export const AllDrinks = reatomComponent(() => {
   const { t } = useTranslation();
   const { token } = theme.useToken();
   const params = allDrinksRoute();
-  console.log("allDrinksRoute", params);
+  const { onAddDrink } = useBehavior();
+  const [open, setOpen] = useState(false);
+  const onClose = () => setOpen(false);
 
   if (!allDrinksRoute.exact()) {
     return null;
@@ -17,7 +25,7 @@ export const AllDrinks = reatomComponent(() => {
   return (
     <Sidebar
       onClose={() => allDrinksRoute.go({ drawer: "hide" })}
-      sidebar={<div>sidebar</div>}
+      sidebar={<AllDrinksSidebar />}
       isDrawer={params?.drawer === "show"}
     >
       <Flex vertical style={{ minHeight: "100%" }}>
@@ -33,11 +41,12 @@ export const AllDrinks = reatomComponent(() => {
 
           {/* Form container */}
           <Flex vertical gap={16}>
-            {/* Form items will go here */}
+            <AllDrinksForm />
           </Flex>
         </Flex>
 
-        <div
+        <Flex
+          gap={4}
           style={{
             position: "sticky",
             bottom: 0,
@@ -47,11 +56,20 @@ export const AllDrinks = reatomComponent(() => {
             zIndex: 10,
           }}
         >
-          <Button type="primary" block size="large">
-            {t("alcoForm.submit")}
+          <Button
+            block
+            onClick={onAddDrink}
+            type="default"
+            icon={<PlusOutlined />}
+          >
+            {t("alcoForm.addDrink")}
           </Button>
-        </div>
+          <Button block type="primary" onClick={() => setOpen(true)}>
+            {t("alcoForm.whenISober")}
+          </Button>
+        </Flex>
       </Flex>
+      <ModalDuration open={open} onClose={onClose} />
     </Sidebar>
   );
 });

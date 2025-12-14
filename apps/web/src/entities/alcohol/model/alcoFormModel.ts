@@ -27,10 +27,11 @@ export const alcoFormListAtom = reatomForm(
           typeOfBottle: ALCOHOL_BOTTLE_TYPE_MAP["Beer"][0] as TypeOfBottle,
           sizeOfBottle: BOTTLE_SIZE_ML_MAP["Bottle"][0] as SizeOfBottle,
           count: 1,
+          breakTime: null as string | null,
         },
       ],
       create: (
-        { name, percentage, typeOfBottle, sizeOfBottle, count },
+        { name, percentage, typeOfBottle, sizeOfBottle, count, breakTime },
         groupName,
       ) => {
         const nameField = reatomField(name, `${groupName}.name`);
@@ -69,12 +70,15 @@ export const alcoFormListAtom = reatomForm(
           },
         });
 
+        const breakTimeField = reatomField(breakTime, `${groupName}.breakTime`);
+
         return {
           name: nameField,
           percentage: percentageField,
           typeOfBottle: typeOfBottleField,
           sizeOfBottle: sizeOfBottleField,
           count: countField,
+          breakTime: breakTimeField,
         };
       },
     }),
@@ -88,6 +92,7 @@ export const alcoFormListAtom = reatomForm(
           percentage: z.number().min(0),
           typeOfBottle: z.literal(TYPE_OF_BOTTLE),
           count: z.number().min(1),
+          breakTime: z.string().nullable().optional(),
         }),
       ),
     }),

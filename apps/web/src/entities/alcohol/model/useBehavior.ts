@@ -25,7 +25,15 @@ export const useBehavior = () => {
       typeOfBottle: ALCOHOL_BOTTLE_TYPE_MAP["Beer"][0],
       sizeOfBottle: BOTTLE_SIZE_ML_MAP["Bottle"][0],
       count: 1,
+      breakTime: null,
     });
+  };
+
+  const onRemoveDrink = (index: number) => {
+    const drinks = drinksFields.drinks.array();
+    if (drinks[index]) {
+      drinksFields.drinks.remove(drinks[index]);
+    }
   };
 
   const alcoOptions = useMemo(
@@ -60,6 +68,7 @@ export const useBehavior = () => {
   return {
     onSubmit,
     onAddDrink,
+    onRemoveDrink,
     alcoOptions,
     getBottleTypeOptions,
     getBottleSizeOptions,

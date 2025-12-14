@@ -11,7 +11,7 @@ export const AlcoCountOfDrinksField = reatomComponent<Props>(
   ({ countField }) => {
     const { t } = useTranslation();
     return (
-      <Flex style={{ minWidth: 200 }} vertical gap={4} flex={1}>
+      <Flex style={{ minWidth: 170 }} vertical gap={4} flex={1}>
         <Typography.Title level={5}>{t("alcoForm.count")}</Typography.Title>
         <Input
           type="number"

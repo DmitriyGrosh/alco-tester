@@ -14,7 +14,7 @@ export const AlcoNameField = reatomComponent<Props>(({ nameField }) => {
   const { alcoOptions } = useBehavior();
 
   return (
-    <Flex style={{ minWidth: 200 }} vertical gap={4} flex={1}>
+    <Flex style={{ minWidth: 150 }} vertical gap={4} flex={1}>
       <Typography.Title level={5}>{t("alcoForm.alcoName")}</Typography.Title>
       <Select
         options={alcoOptions}

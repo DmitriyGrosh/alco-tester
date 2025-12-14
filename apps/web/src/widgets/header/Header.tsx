@@ -11,7 +11,7 @@ export const Header = reatomComponent(() => {
     <Flex
       justify="space-between"
       align="center"
-      style={{ padding: "0 8px", height: "100%" }}
+      style={{ padding: "0 16px", height: "100%" }}
     >
       <Flex gap={8} align="center">
         {!homeRoute.exact() && (
