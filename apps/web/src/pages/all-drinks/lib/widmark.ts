@@ -93,15 +93,15 @@ export const calculateWidmark = (
   estimatedPeakPermille = Math.max(0, permille - eliminatedDuringDrinking);
 
   return {
-    alcoholGrams,
-    permille,
-    estimatedPeakPermille,
-    permilleByVolume,
-    percentByVolume,
-    plasma,
-    breath,
-    minTime: calculateTime(0.5, 0.20), // Fast elimination
-    avgTime: calculateTime(0.75, 0.15), // Average elimination
-    maxTime: calculateTime(1.0, 0.10), // Slow elimination
+    alcoholGrams, // Общее количество чистого алкоголя в граммах
+    permille, // Теоретическая максимальная концентрация алкоголя в крови (‰)
+    estimatedPeakPermille, // Оценочная пиковая концентрация с учетом времени употребления (‰)
+    permilleByVolume, // Концентрация алкоголя в крови по объему (‰ BAC). РФ: > 0.3 г/л — лишение прав.
+    percentByVolume, // Процентное содержание алкоголя в крови (% BAC)
+    plasma, // Концентрация в плазме крови (г/л)
+    breath, // Концентрация в выдыхаемом воздухе (мг/л). РФ: > 0.16 мг/л — лишение прав.
+    minTime: calculateTime(0.5, 0.20), // Минимальное время трезвости (быстрый метаболизм)
+    avgTime: calculateTime(0.75, 0.15), // Среднее время трезвости (нормальный метаболизм)
+    maxTime: calculateTime(1.0, 0.10), // Максимальное время трезвости (медленный метаболизм)
   };
 };
