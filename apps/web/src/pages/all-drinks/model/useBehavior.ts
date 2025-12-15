@@ -3,13 +3,12 @@ import {
   ALCOHOL_PERCENTAGE_MAP,
   BOTTLE_SIZE_ML_MAP,
 } from "../../../entities/alcohol";
-import { alcoFormListAtom, durationFormAtom } from "./durationFormModel";
+import { allDrinksFormAtom } from "./allDrinksModel";
 
 export const useBehavior = () => {
-  const { fields: drinksFields } = alcoFormListAtom;
-  const { fields: durationFields, submit } = durationFormAtom;
+  const { fields, submit } = allDrinksFormAtom;
 
-  const drinks = drinksFields.drinks.array();
+  const drinks = fields.drinks.array();
   const drinksSidebar = drinks.map((drink) => ({
     name: drink.name.value(),
     percentage: drink.percentage.value(),
@@ -20,7 +19,7 @@ export const useBehavior = () => {
   }));
 
   const onAddDrink = () => {
-    drinksFields.drinks.create({
+    fields.drinks.create({
       name: "Beer",
       percentage: ALCOHOL_PERCENTAGE_MAP["Beer"],
       typeOfBottle: ALCOHOL_BOTTLE_TYPE_MAP["Beer"][0],
@@ -31,9 +30,9 @@ export const useBehavior = () => {
   };
 
   const onRemoveDrink = (index: number) => {
-    const drinks = drinksFields.drinks.array();
+    const drinks = fields.drinks.array();
     if (drinks[index]) {
-      drinksFields.drinks.remove(drinks[index]);
+      fields.drinks.remove(drinks[index]);
     }
   };
 
@@ -42,7 +41,13 @@ export const useBehavior = () => {
     onRemoveDrink,
     drinksSidebar,
     drinks,
-    durationFields,
+    durationFields: {
+      start: fields.start,
+      end: fields.end,
+      weight: fields.weight,
+      gender: fields.gender,
+      age: fields.age,
+    },
     submit,
   };
 };

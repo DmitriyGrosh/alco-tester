@@ -27,8 +27,7 @@ export const AllDrinksSidebar = reatomComponent<Props>(
     const { token } = theme.useToken();
 
     const totalVolume = drinks.reduce(
-      (acc, drink) =>
-        acc + Number(drink.count) * Number(drink.sizeOfBottle),
+      (acc, drink) => acc + Number(drink.count) * Number(drink.sizeOfBottle),
       0,
     );
 
@@ -44,8 +43,7 @@ export const AllDrinksSidebar = reatomComponent<Props>(
       totalVolume > 0 ? weightedPercentage / totalVolume : 0;
 
     const totalPureAlcohol = drinks.reduce((acc, drink) => {
-      const volume =
-        Number(drink.count) * Number(drink.sizeOfBottle);
+      const volume = Number(drink.count) * Number(drink.sizeOfBottle);
       const percentage = Number(drink.percentage);
       const pureAlcohol = (volume * percentage * 0.79) / 100;
       return acc + pureAlcohol;
@@ -78,8 +76,7 @@ export const AllDrinksSidebar = reatomComponent<Props>(
                     </Typography.Text>
                     <Flex align="center" gap={8}>
                       <Typography.Text type="secondary">
-                        {drink.count} x {drink.sizeOfBottle}{" "}
-                        {t("units.ml")}
+                        {drink.count} x {drink.sizeOfBottle} {t("units.ml")}
                       </Typography.Text>
                       <Button
                         type="text"
@@ -92,9 +89,7 @@ export const AllDrinksSidebar = reatomComponent<Props>(
                   </Flex>
                   <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                     {drink.percentage}% |{" "}
-                    {t(
-                      `alcoForm.options.bottleType.${drink.typeOfBottle}`,
-                    )}
+                    {t(`alcoForm.options.bottleType.${drink.typeOfBottle}`)}
                   </Typography.Text>
                 </Flex>
                 {drink.breakTime && (
@@ -103,9 +98,7 @@ export const AllDrinksSidebar = reatomComponent<Props>(
                     style={{ fontSize: 12, marginTop: 4 }}
                   >
                     {t("alcoForm.breakBetweenDrinks")}:{" "}
-                    {t(
-                      `alcoForm.time.${drink.breakTime?.replace(/\s+/g, "")}`,
-                    )}
+                    {t(`alcoForm.time.${drink.breakTime?.replace(/\s+/g, "")}`)}
                   </Typography.Text>
                 )}
               </Flex>

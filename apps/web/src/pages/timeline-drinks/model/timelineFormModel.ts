@@ -20,6 +20,7 @@ import {
   type SizeOfBottle,
   type TypeOfBottle,
 } from "../../../entities/alcohol";
+import dayjs, { Dayjs } from "dayjs";
 
 export const adeResultAtom = atom<AdePoint[]>([], "adeResultAtom");
 
@@ -120,7 +121,7 @@ export const timelineFormAtom = reatomForm(
           typeOfBottle: z.literal(TYPE_OF_BOTTLE),
           sizeOfBottle: z.number().min(1),
           count: z.number().min(1),
-          time: z.any(),
+          time: z.instanceof(dayjs as unknown as typeof Dayjs),
           id: z.string(),
         }),
       ), // Simplified validation for now

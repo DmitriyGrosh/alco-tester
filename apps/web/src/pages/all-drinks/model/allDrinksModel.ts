@@ -6,7 +6,7 @@ import {
   withComputed,
 } from "@reatom/core";
 import { z } from "zod";
-import { type Dayjs } from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import { calculateWidmark } from "../lib";
 import {
   type AlcoholType,
@@ -19,7 +19,7 @@ import {
   TYPE_OF_BOTTLE,
 } from "../../../entities/alcohol";
 
-export const alcoFormListAtom = reatomForm(
+export const allDrinksFormAtom = reatomForm(
   {
     drinks: experimental_fieldArray({
       initState: [
@@ -84,8 +84,28 @@ export const alcoFormListAtom = reatomForm(
         };
       },
     }),
+    start: reatomField<Dayjs | null>(null, "start"),
+    end: reatomField<Dayjs | null>(null, "end"),
+    weight: reatomField<number, string>(70, {
+      name: "weight",
+      fromState: (state) => state.toString(),
+      toState: (value: string) => {
+        const parsed = Number(value);
+        return isNaN(parsed) ? throwAbort() : parsed;
+      },
+    }),
+    gender: reatomField<"male" | "female" | null>("male", "gender"),
+    age: reatomField<number, string>(25, {
+      name: "age",
+      fromState: (state) => state.toString(),
+      toState: (value: string) => {
+        const parsed = Number(value);
+        return isNaN(parsed) ? throwAbort() : parsed;
+      },
+    }),
   },
   {
+    name: "allDrinksFormAtom",
     validateOnBlur: true,
     schema: z.object({
       drinks: z.array(
@@ -98,34 +118,20 @@ export const alcoFormListAtom = reatomForm(
           breakTime: z.string().nullable().optional(),
         }),
       ),
-    }),
-  },
-);
-
-export const durationFormAtom = reatomForm(
-  {
-    start: reatomField<Dayjs | null>(null, "start"),
-    end: reatomField<Dayjs | null>(null, "end"),
-    weight: reatomField<number | null>(null, "weight"),
-    gender: reatomField<"male" | "female" | null>(null, "gender"),
-    age: reatomField<number | null>(null, "age"),
-  },
-  {
-    name: "durationFormAtom",
-    validateOnBlur: true,
-    schema: z.object({
-      start: z.any(),
-      end: z.any(),
+      start: z.instanceof(dayjs as unknown as typeof Dayjs),
+      end: z.instanceof(dayjs as unknown as typeof Dayjs),
       weight: z.number().min(30).max(300),
       gender: z.enum(["male", "female"]),
       age: z.number().min(18).max(100),
     }),
     onSubmit(state) {
-      const drinks = alcoFormListAtom.fields.drinks.array().map((drink) => ({
-        count: Number(drink.count.value()),
-        volume: Number(drink.sizeOfBottle.value()),
-        percentage: Number(drink.percentage.value()),
+      const drinks = state.drinks.map((drink) => ({
+        count: Number(drink.count),
+        volume: Number(drink.sizeOfBottle),
+        percentage: Number(drink.percentage),
       }));
+
+      console.log("state", state)
 
       const data = calculateWidmark(
         drinks,

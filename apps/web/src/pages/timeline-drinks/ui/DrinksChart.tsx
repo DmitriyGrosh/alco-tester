@@ -62,8 +62,12 @@ export const DrinksChart = reatomComponent(() => {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      <Typography.Text type="secondary" style={{ marginTop: 16, display: 'block' }}>
-        * This is an estimation based on the Widmark formula. Individual results may vary.
+      <Typography.Text
+        type="secondary"
+        style={{ marginTop: 16, display: "block" }}
+      >
+        * This is an estimation based on the Widmark formula. Individual results
+        may vary.
       </Typography.Text>
     </Card>
   );

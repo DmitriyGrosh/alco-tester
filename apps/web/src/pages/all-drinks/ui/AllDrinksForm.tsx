@@ -1,5 +1,5 @@
 import { reatomComponent } from "@reatom/react";
-import { Card, Flex } from "antd";
+import { Button, Card, Flex } from "antd";
 import {
   AlcoCountOfDrinksField,
   AlcoNameField,
@@ -9,9 +9,10 @@ import {
 } from "../../../entities/alcohol";
 import { BreakTimeButton } from "./BreakTimeButton";
 import { useBehavior } from "../model";
+import { DeleteOutlined } from "@ant-design/icons";
 
 export const AllDrinksForm = reatomComponent(() => {
-  const { drinks  } = useBehavior();
+  const { drinks, onRemoveDrink } = useBehavior();
   const isLastDrink = (index: number) => drinks.length === index + 1;
 
   return (
@@ -31,6 +32,13 @@ export const AllDrinksForm = reatomComponent(() => {
                 sizeOfBottleField={drink.sizeOfBottle}
               />
               <AlcoCountOfDrinksField countField={drink.count} />
+              <Flex align="flex-end">
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => onRemoveDrink(index)}
+                />
+              </Flex>
             </Flex>
           </Card>
           {drinks.length > 1 && !isLastDrink(index) && (

@@ -22,7 +22,7 @@ export const AlcoCountOfDrinksField = reatomComponent<Props>(
           }
           {...bindField(countField)}
         />
-        {countField.validation().triggered && (
+        {countField.validation().triggered && countField.validation().error  && (
           <Typography.Text type="danger">
             {countField.validation().error}
           </Typography.Text>
